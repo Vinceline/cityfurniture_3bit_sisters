@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WalkSafe+ Data Sample CSV Exporter</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚦 WalkSafe+ Data Exporter</h1>
+            <p>Generate sample traffic accident and crime datasets for Delray Beach, FL</p>
+        </div>
+
+        <div class="content">
+            <div class="boundary-info">
+                <strong>Coverage Area:</strong> Data generated within 3km radius of Delray Beach center (26.4615, -80.0728) to match iOS app boundary
+            </div>
+
+            <!-- Traffic Accident Data Section -->
+            <div class="section">
+                <h2>
+                    <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/>
+                    </svg>
+                    Traffic Accident Data Generator
+                </h2>
+                
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Number of Accidents</label>
+                        <input type="number" id="accidentCount" value="500" min="10" max="2000">
+                    </div>
+                    <div class="control-group">
+                        <label>Real Data Percentage</label>
+                        <input type="number" id="accidentRealPercent" value="30" min="0" max="100">
+                    </div>
+                    <div class="control-group">
+                        <label>Safety Distribution</label>
+                        <select id="accidentSafety">
+                            <option value="balanced">Balanced (Realistic)</option>
+                            <option value="safe-heavy">Safe Zone Heavy</option>
+                            <option value="danger-heavy">Danger Zone Heavy</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn" onclick="generateAccidentData()">
+                    <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                    </svg>
+                    Generate Accident Data
+                </button>
+
+                <button class="btn btn-success" onclick="downloadAccidentCSV()" id="downloadAccidentBtn" disabled>
+                    <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M14,2V8H20L14,2M12,18V22H16V18H19L15,14L11,18H14Z"/>
+                    </svg>
+                    Download CSV
+                </button>
+
+                <div id="accidentStatus"></div>
+                <div id="accidentStats"></div>
+                <div id="accidentPreview"></div>
+            </div>
+
+            <!-- Crime Data Section -->
+            <div class="section">
+                <h2>
+                    <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12,1L21,6V8H3V6L12,1M21,9V10C21,10.55 20.55,11 20,11H4C3.45,11 3,10.55 3,10V9H21M3,12H21V18C21,19.1 20.1,20 19,20H5C3.9,20 3,19.1 3,18V12Z"/>
+                    </svg>
+                    Crime Data Generator
+                </h2>
+                
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Number of Crimes</label>
+                        <input type="number" id="crimeCount" value="500" min="10" max="2000">
+                    </div>
+                    <div class="control-group">
+                        <label>Real Data Percentage</label>
+                        <input type="number" id="crimeRealPercent" value="25" min="0" max="100">
+                    </div>
+                    <div class="control-group">
+                        <label>Crime Distribution</label>
+                        <select id="crimeSafety">
+                            <option value="balanced">Balanced (Realistic)</option>
+                            <option value="low-crime">Low Crime Areas</option>
+                            <option value="high-crime">High Crime Areas</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn" onclick="generateCrimeData()">
+                    <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                    </svg>
+                    Generate Crime Data
+                </button>
+
+                <button class="btn btn-success" onclick="downloadCrimeCSV()" id="downloadCrimeBtn" disabled>
+                    <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M14,2V8H20L14,2M12,18V22H16V18H19L15,14L11,18H14Z"/>
+                    </svg>
+                    Download CSV
+                </button>
+
+                <div id="crimeStatus"></div>
+                <div id="crimeStats"></div>
+                <div id="crimePreview"></div>
+            </div>
+
+            <!-- Combined Export Section -->
+            <div class="section">
+                <h2>
+                    <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M14,17H18V19H14V17M14,5H18V7H14V5M14,9H18V11H14V9M14,13H18V15H14V13M12,17H8V19H12V17M12,5H8V7H12V5M12,9H8V11H12V9M12,13H8V15H12V13Z"/>
+                    </svg>
+                    Combined Dataset Export
+                </h2>
+                
+                <button class="btn btn-info" onclick="downloadCombinedCSV()" id="downloadCombinedBtn" disabled>
+                    <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M14,2V8H20L14,2M12,18V22H16V18H19L15,14L11,18H14Z"/>
+                    </svg>
+                    Download Combined CSV
+                </button>
+                
+                <p style="color: #718096; margin-top: 10px;">
+                    Generate both datasets first, then download a combined CSV with both accidents and crimes.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
