@@ -5,13 +5,14 @@ import MapKit
 
 struct MapView: UIViewRepresentable {
     @ObservedObject var locationManager: LocationManager
-    @ObservedObject var apiService: WalkSafeAPIService
-    @Binding var showingSafetyAlert: Bool
-    @Binding var currentSafetyPrediction: SafetyPrediction?
-    @Binding var selectedRoute: [CLLocationCoordinate2D]
-    @Binding var showingRouteAnalysis: Bool
-    @Binding var showingDangerZones: Bool
-
+       @ObservedObject var apiService: WalkSafeAPIService
+       @Binding var showingSafetyAlert: Bool
+       @Binding var currentSafetyPrediction: SafetyPrediction?
+       @Binding var selectedRoute: [CLLocationCoordinate2D]
+       @Binding var showingRouteAnalysis: Bool
+       @Binding var showingDangerZones: Bool
+       @Binding var showingRouteOnMap: Bool  // Add this line
+       
     func makeUIView(context: Context) -> MKMapView {
         let mapView = MKMapView()
         mapView.delegate = context.coordinator

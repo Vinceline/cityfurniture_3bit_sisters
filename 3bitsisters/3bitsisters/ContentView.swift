@@ -18,6 +18,7 @@ struct ContentView: View {
     @State private var selectedRoute: [CLLocationCoordinate2D] = []
     @State private var showingTripPlanner = false
     @State private var showingDangerZones = false // Off by default
+    @State private var showingRouteOnMap = false
     
     var body: some View {
         ZStack {
@@ -29,9 +30,9 @@ struct ContentView: View {
                 currentSafetyPrediction: $currentSafetyPrediction,
                 selectedRoute: $selectedRoute,
                 showingRouteAnalysis: $showingRouteAnalysis,
-                showingDangerZones: $showingDangerZones
-            )
-            .ignoresSafeArea()
+                showingDangerZones: $showingDangerZones,
+                showingRouteOnMap: $showingRouteOnMap
+            )            .ignoresSafeArea()
             
             // Top UI Controls
             VStack {
@@ -180,11 +181,17 @@ struct ContentView: View {
                 route: selectedRoute
             )
         }
+        // In ContentView.swift, update the TripPlannerView sheet:
         .sheet(isPresented: $showingTripPlanner) {
             TripPlannerView(
                 apiService: apiService,
-                locationManager: locationManager
+                locationManager: locationManager,
+                selectedRoute: $selectedRoute,
+                showingRouteOnMap: $showingRouteOnMap,
+                showingTripPlanner: $showingTripPlanner
             )
+    
+
         }
         .alert("Safety Alert", isPresented: $showingSafetyAlert) {
             Button("OK") { }
