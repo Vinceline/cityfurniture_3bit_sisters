@@ -4,25 +4,24 @@
 //
 //  Created by Vinceline Bertrand on 9/19/25.
 //
-
 import SwiftUI
 import MapKit
-
+import CoreLocation
 struct ContentView: View {
-    @StateObject private var locationManager = LocationManager()
-    @StateObject private var apiService = WalkSafeAPIService()
+    @EnvironmentObject var locationManager: LocationManager
+    @EnvironmentObject var apiService: WalkSafeAPIService
     @State private var showingReportSheet = false
     @State private var showingSafetyAlert = false
     @State private var currentSafetyPrediction: SafetyPrediction?
     @State private var showingRouteAnalysis = false
     @State private var selectedRoute: [CLLocationCoordinate2D] = []
     @State private var showingTripPlanner = false
-    @State private var showingDangerZones = false // Off by default
+    @State private var showingDangerZones = false
     @State private var showingRouteOnMap = false
     
     var body: some View {
         ZStack {
-            // Main Map View
+            // Main Map View - Remove NavigationView wrapper
             MapView(
                 locationManager: locationManager,
                 apiService: apiService,
@@ -32,7 +31,8 @@ struct ContentView: View {
                 showingRouteAnalysis: $showingRouteAnalysis,
                 showingDangerZones: $showingDangerZones,
                 showingRouteOnMap: $showingRouteOnMap
-            )            .ignoresSafeArea()
+            )
+            .ignoresSafeArea()
             
             // Top UI Controls
             VStack {
@@ -61,11 +61,11 @@ struct ContentView: View {
                     }
                 }
                 .padding(.horizontal)
-                .padding(.top, 50)
+                .padding(.top, 10) // Reduced top padding for tab view
                 
                 Spacer()
                 
-                // Bottom Controls
+                // Bottom Controls - Move up to account for tab bar
                 HStack(spacing: 16) {
                     // Report Incident Button
                     Button(action: {
@@ -118,7 +118,7 @@ struct ContentView: View {
                         .cornerRadius(20)
                     }
                 }
-                .padding(.bottom, 40)
+                .padding(.bottom, 100) // Add space for tab bar
             }
             
             // Danger Zone Legend (only when zones are visible)
@@ -164,11 +164,12 @@ struct ContentView: View {
                         .cornerRadius(12)
                         .shadow(radius: 4)
                         .padding(.trailing, 16)
-                        .padding(.bottom, 120)
+                        .padding(.bottom, 180) // Account for tab bar
                     }
                 }
             }
         }
+        // Keep all your existing sheets and alerts
         .sheet(isPresented: $showingReportSheet) {
             ReportIncidentView(
                 apiService: apiService,
@@ -181,7 +182,6 @@ struct ContentView: View {
                 route: selectedRoute
             )
         }
-        // In ContentView.swift, update the TripPlannerView sheet:
         .sheet(isPresented: $showingTripPlanner) {
             TripPlannerView(
                 apiService: apiService,
@@ -190,8 +190,6 @@ struct ContentView: View {
                 showingRouteOnMap: $showingRouteOnMap,
                 showingTripPlanner: $showingTripPlanner
             )
-    
-
         }
         .alert("Safety Alert", isPresented: $showingSafetyAlert) {
             Button("OK") { }
@@ -205,16 +203,15 @@ struct ContentView: View {
         }
     }
     
+    // Keep all your existing functions unchanged
     private func toggleDangerZones() {
         withAnimation(.easeInOut(duration: 0.3)) {
             showingDangerZones.toggle()
         }
         
-        // Haptic feedback
         let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
         impactFeedback.impactOccurred()
         
-        // Optional: Check current location safety when showing zones
         if showingDangerZones {
             checkCurrentLocationSafety()
         }

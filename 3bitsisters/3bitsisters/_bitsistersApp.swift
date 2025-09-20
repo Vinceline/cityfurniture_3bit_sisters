@@ -11,7 +11,7 @@ import SwiftUI
 struct _bitsistersApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            NaviTabView()
                 .preferredColorScheme(.dark)
         }
     }
