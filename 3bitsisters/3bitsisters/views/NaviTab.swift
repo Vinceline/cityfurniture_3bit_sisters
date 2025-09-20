@@ -5,6 +5,8 @@
 //  Created by Vinceline Bertrand on 9/20/25.
 //
 import SwiftUI
+import MapKit
+import CoreLocation
 
 struct NaviTabView: View {
     @StateObject private var locationManager = LocationManager()
@@ -15,38 +17,46 @@ struct NaviTabView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             // Map Tab - Walking/Safety functionality (index 0)
-            ZStack {
-                if isMapViewActive {
-                    ContentView()
-                        .environmentObject(locationManager)
-                        .environmentObject(apiService)
-                } else {
-                    // Placeholder when map is not active
-                    VStack {
-                        Image(systemName: "shoe.2.fill")
-                            .font(.system(size: 60))
-                            .foregroundColor(.blue)
-                        Text("Tap to activate map")
-                            .font(.title3)
-                            .foregroundColor(.secondary)
-                        Button("Activate Map") {
-                            isMapViewActive = true
+            NavigationView {
+                ZStack {
+                    if isMapViewActive {
+                        MapTabContent()
+                            .environmentObject(locationManager)
+                            .environmentObject(apiService)
+                            .navigationBarHidden(true)
+                    } else {
+                        // Placeholder when map is not active
+                        VStack(spacing: 20) {
+                            Image(systemName: "shoe.2.fill")
+                                .font(.system(size: 60))
+                                .foregroundColor(.blue)
+                            Text("WalkSafe Map")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            Text("Tap to activate map and safety features")
+                                .font(.body)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                            Button("Activate Map") {
+                                isMapViewActive = true
+                            }
+                            .padding()
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
                         }
                         .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
+                        .navigationTitle("Walk Safe")
                     }
                 }
             }
             .tabItem {
                 Image(systemName: "shoe.2.fill")
-                Text("")
+                Text("Walk Safe")
             }
             .tag(0)
             .onAppear {
                 if selectedTab == 0 && !isMapViewActive {
-                    // Auto-activate when tab is selected
                     isMapViewActive = true
                 }
             }
@@ -57,7 +67,7 @@ struct NaviTabView: View {
                 .environmentObject(apiService)
                 .tabItem {
                     Image(systemName: "person.fill")
-                    Text("")
+                    Text("Profile")
                 }
                 .tag(1)
         }
@@ -69,5 +79,4 @@ struct NaviTabView: View {
         }
     }
 }
-
 

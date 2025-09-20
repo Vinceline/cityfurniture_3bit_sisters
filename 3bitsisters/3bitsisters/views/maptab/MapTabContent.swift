@@ -1,13 +1,15 @@
 //
-//  ContentView.swift
+//  MapTabContent.swift
 //  3bitsisters
 //
-//  Created by Vinceline Bertrand on 9/19/25.
+//  Created by Vinceline Bertrand on 9/20/25.
 //
+
 import SwiftUI
 import MapKit
 import CoreLocation
-struct ContentView: View {
+
+struct MapTabContent: View {
     @EnvironmentObject var locationManager: LocationManager
     @EnvironmentObject var apiService: WalkSafeAPIService
     @State private var showingReportSheet = false
@@ -20,71 +22,74 @@ struct ContentView: View {
     @State private var showingRouteOnMap = false
     @State private var showingWeatherAlert = true
     @State private var weatherAlertOffset: CGFloat = 0
+    @State private var showingLocationOptions = false
+    @State private var showingContactPicker = false
     
     var body: some View {
         ZStack {
             // Weather Alert Popup
-                    if showingWeatherAlert {
-                        VStack {
-                            HStack {
-                                HStack(spacing: 12) {
-                                    Image(systemName: "cloud.bolt.rain.fill")
-                                        .font(.title2)
-                                        .foregroundColor(.yellow)
-                                    
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("Weather Alert")
-                                            .font(.headline)
-                                            .fontWeight(.bold)
-                                        Text("Heavy rain and lightning expected in 30 minutes. Please seek shelter soon.")
-                                            .font(.body)
-                                            .multilineTextAlignment(.leading)
-                                    }
-                                    
-                                    Spacer()
-                                    
-                                    Button(action: {
-                                        dismissWeatherAlert()
-                                    }) {
-                                        Image(systemName: "xmark")
-                                            .font(.title3)
-                                            .fontWeight(.medium)
-                                            .foregroundColor(.primary)
+            if showingWeatherAlert {
+                VStack {
+                    HStack {
+                        HStack(spacing: 12) {
+                            Image(systemName: "cloud.bolt.rain.fill")
+                                .font(.title2)
+                                .foregroundColor(.yellow)
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Weather Alert")
+                                    .font(.headline)
+                                    .fontWeight(.bold)
+                                Text("Heavy rain and lightning expected in 30 minutes. Please seek shelter soon.")
+                                    .font(.body)
+                                    .multilineTextAlignment(.leading)
+                            }
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                dismissWeatherAlert()
+                            }) {
+                                Image(systemName: "xmark")
+                                    .font(.title3)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.primary)
+                            }
+                        }
+                        .padding()
+                        .background(Color.orange.opacity(0.9))
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                        .shadow(radius: 8)
+                    }
+                    .padding(.horizontal)
+                    .padding(.top, 60)
+                    .offset(y: weatherAlertOffset)
+                    .gesture(
+                        DragGesture()
+                            .onChanged { value in
+                                if value.translation.height < 0 {
+                                    weatherAlertOffset = value.translation.height
+                                }
+                            }
+                            .onEnded { value in
+                                if value.translation.height < -50 {
+                                    dismissWeatherAlert()
+                                } else {
+                                    withAnimation(.spring()) {
+                                        weatherAlertOffset = 0
                                     }
                                 }
-                                .padding()
-                                .background(Color.orange.opacity(0.9))
-                                .foregroundColor(.white)
-                                .cornerRadius(12)
-                                .shadow(radius: 8)
                             }
-                            .padding(.horizontal)
-                            .padding(.top, 60) // Account for safe area
-                            .offset(y: weatherAlertOffset)
-                            .gesture(
-                                DragGesture()
-                                    .onChanged { value in
-                                        if value.translation.height < 0 {
-                                            weatherAlertOffset = value.translation.height
-                                        }
-                                    }
-                                    .onEnded { value in
-                                        if value.translation.height < -50 {
-                                            dismissWeatherAlert()
-                                        } else {
-                                            withAnimation(.spring()) {
-                                                weatherAlertOffset = 0
-                                            }
-                                        }
-                                    }
-                            )
+                    )
 
-                            Spacer()
-                        }
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                        .zIndex(1000) // Ensure it appears above map
-                    }
-            // Main Map View - Remove NavigationView wrapper
+                    Spacer()
+                }
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .zIndex(1000)
+            }
+            
+            // Main Map View
             MapView(
                 locationManager: locationManager,
                 apiService: apiService,
@@ -99,17 +104,33 @@ struct ContentView: View {
             
             // Top UI Controls
             VStack {
-                HStack {
-                    Spacer()
-                    // Location Status
-                    Button(action: {
-                        locationManager.requestLocation()
-                    }) {
-                        Image(systemName: locationManager.isLocationAvailable ? "location.fill" : "location.slash")
-                            .foregroundColor(.white)
-                            .padding(12)
-                            .background(locationManager.isLocationAvailable ? Color.green : Color.red)
-                            .clipShape(Circle())
+                VStack(spacing: 12) {
+                    HStack {
+                        Spacer()
+                        // Location Status Button (simplified)
+                        Button(action: {
+                            showingLocationOptions = true
+                        }) {
+                            Image(systemName: locationManager.isLocationAvailable ? "location.fill" : "location.slash")
+                                .foregroundColor(.white)
+                                .padding(12)
+                                .background(locationManager.isLocationAvailable ? Color.green : Color.red)
+                                .clipShape(Circle())
+                        }
+                    }
+                    
+                    HStack {
+                        Spacer()
+                        // Dedicated Location Sharing Button
+                        Button(action: {
+                            showingContactPicker = true
+                        }) {
+                            Image(systemName: "square.and.arrow.up")
+                                .foregroundColor(.white)
+                                .padding(12)
+                                .background(Color.blue)
+                                .clipShape(Circle())
+                        }
                     }
                 }
                 .padding(.horizontal)
@@ -117,9 +138,8 @@ struct ContentView: View {
                 
                 Spacer()
                 
-                // Bottom Controls - Very bottom, just above tab bar
+                // Bottom Controls
                 HStack(spacing: 16) {
-                    // Report Incident Button
                     Button(action: {
                         showingReportSheet = true
                     }) {
@@ -136,7 +156,6 @@ struct ContentView: View {
                         .cornerRadius(20)
                     }
                     
-                    // Trip Planner Button
                     Button(action: {
                         showingTripPlanner = true
                     }) {
@@ -153,7 +172,6 @@ struct ContentView: View {
                         .cornerRadius(20)
                     }
                     
-                    // Check Safety / Toggle Danger Zones
                     Button(action: {
                         toggleDangerZones()
                     }) {
@@ -170,10 +188,10 @@ struct ContentView: View {
                         .cornerRadius(20)
                     }
                 }
-                .padding(.bottom, 20) // Much closer to tab bar
+                .padding(.bottom, 100) // Account for tab bar
             }
             
-            // Danger Zone Legend (only when zones are visible)
+            // Danger Zone Legend
             if showingDangerZones {
                 VStack {
                     Spacer()
@@ -216,12 +234,11 @@ struct ContentView: View {
                         .cornerRadius(12)
                         .shadow(radius: 4)
                         .padding(.trailing, 16)
-                        .padding(.bottom, 180) // Account for tab bar
+                        .padding(.bottom, 180)
                     }
                 }
             }
         }
-        // Keep all your existing sheets and alerts
         .sheet(isPresented: $showingReportSheet) {
             ReportIncidentView(
                 apiService: apiService,
@@ -243,6 +260,28 @@ struct ContentView: View {
                 showingTripPlanner: $showingTripPlanner
             )
         }
+        .actionSheet(isPresented: $showingLocationOptions) {
+            ActionSheet(
+                title: Text("Location Options"),
+                message: Text("Manage your location settings"),
+                buttons: [
+                    .default(Text("Refresh Location")) {
+                        locationManager.requestLocation()
+                    },
+                    .default(Text("Open Location Settings")) {
+                        if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
+                            UIApplication.shared.open(settingsUrl)
+                        }
+                    },
+                    .cancel()
+                ]
+            )
+        }
+        // parent view
+        .sheet(isPresented: $showingContactPicker) {
+            LocationSharingView()
+        }
+
         .alert("Safety Alert", isPresented: $showingSafetyAlert) {
             Button("OK") { }
         } message: {
@@ -255,7 +294,6 @@ struct ContentView: View {
         }
     }
     
-    // Keep all your existing functions unchanged
     private func toggleDangerZones() {
         withAnimation(.easeInOut(duration: 0.3)) {
             showingDangerZones.toggle()
@@ -268,11 +306,13 @@ struct ContentView: View {
             checkCurrentLocationSafety()
         }
     }
+    
     private func dismissWeatherAlert() {
         withAnimation(.easeInOut(duration: 0.3)) {
             showingWeatherAlert = false
         }
     }
+    
     private func checkCurrentLocationSafety() {
         guard let location = locationManager.currentLocation else { return }
         
@@ -314,4 +354,3 @@ struct ContentView: View {
         }
     }
 }
-
