@@ -19,6 +19,7 @@ struct ReportIncidentView: View {
     @State private var geocodedLocation: CLLocation?
     @State private var showingLocationError = false
     @State private var locationErrorMessage = ""
+    @State private var showingContactInfo = false
     
     let incidentTypes = [
         ("dog", "Unleashed Dog", "🐕"),
@@ -255,22 +256,134 @@ struct ReportIncidentView: View {
                 }
             )
             .alert("Report Submitted", isPresented: $showingSuccessAlert) {
-                Button("OK") {
+                Button("Show Contacts") {
+                    showingContactInfo = true
+                }
+                Button("Done") {
                     presentationMode.wrappedValue.dismiss()
                 }
             } message: {
-                Text("Thank you for helping make walking safer for everyone!")
+                Text("Thank you for helping make walking safer for everyone! Would you like to see relevant emergency contacts?")
             }
             .alert("Location Error", isPresented: $showingLocationError) {
                 Button("OK") { }
             } message: {
                 Text(locationErrorMessage)
             }
+            .sheet(isPresented: $showingContactInfo) {
+                NavigationView {
+                    VStack(spacing: 20) {
+                        VStack(spacing: 12) {
+                            Image(systemName: "phone.circle.fill")
+                                .font(.system(size: 60))
+                                .foregroundColor(.blue)
+                            
+                            Text("Emergency Contacts")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            
+                            Text("For: \(incidentTypes.first(where: { $0.0 == selectedIncidentType })?.1 ?? "Incident")")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
+                        
+                        VStack(spacing: 16) {
+                            ForEach(getEmergencyContacts(for: selectedIncidentType), id: \.0) { contact in
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(contact.0)
+                                            .font(.headline)
+                                            .fontWeight(.semibold)
+                                        Text(contact.1)
+                                            .font(.title3)
+                                            .foregroundColor(.blue)
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    Button(action: {
+                                        if let url = URL(string: "tel:\(contact.1.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: "(", with: "").replacingOccurrences(of: ")", with: "").replacingOccurrences(of: "-", with: ""))") {
+                                            UIApplication.shared.open(url)
+                                        }
+                                    }) {
+                                        Image(systemName: "phone.fill")
+                                            .font(.title2)
+                                            .foregroundColor(.white)
+                                            .padding(12)
+                                            .background(Color.green)
+                                            .clipShape(Circle())
+                                    }
+                                }
+                                .padding()
+                                .background(Color.gray.opacity(0.1))
+                                .cornerRadius(12)
+                            }
+                        }
+                        .padding(.horizontal)
+                        
+                        Spacer()
+                        
+                        Text("Tap the phone icon to call directly")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.bottom)
+                    }
+                    .navigationTitle("Emergency Contacts")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .navigationBarItems(
+                        trailing: Button("Done") {
+                            showingContactInfo = false
+                        }
+                    )
+                }
+            }
         }
     }
     
     private func canSubmitReport() -> Bool {
         return effectiveLocation != nil
+    }
+    
+    private func getEmergencyContacts(for incidentType: String) -> [(String, String)] {
+        switch incidentType {
+        case "dog":
+            return [
+                ("Animal Control", "(561) 243-7911"),
+                ("Non-Emergency Police", "(561) 243-7800")
+            ]
+        case "assault":
+            return [
+                ("Police Emergency", "911"),
+                ("Non-Emergency Police", "(561) 243-7800"),
+                ("Crisis Hotline", "(561) 655-2273")
+            ]
+        case "flooding":
+            return [
+                ("Emergency Services", "911"),
+                ("Public Works", "(561) 243-7045"),
+                ("Emergency Management", "(561) 243-7920")
+            ]
+        case "accident":
+            return [
+                ("Emergency Services", "911"),
+                ("Police Traffic Unit", "(561) 243-7825"),
+                ("Road Maintenance", "(561) 243-7045")
+            ]
+        case "theft":
+            return [
+                ("Police Emergency", "911"),
+                ("Non-Emergency Police", "(561) 243-7800"),
+                ("Victim Services", "(561) 355-4943")
+            ]
+        case "other":
+            return [
+                ("Non-Emergency Police", "(561) 243-7800"),
+                ("City Services", "(561) 243-7000")
+            ]
+        default:
+            return [("Non-Emergency Police", "(561) 243-7800")]
+        }
     }
     
     private func getSubmitButtonHint() -> String {
