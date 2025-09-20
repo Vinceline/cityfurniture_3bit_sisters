@@ -12,6 +12,7 @@ struct _bitsistersApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .preferredColorScheme(.dark)
         }
     }
 }
