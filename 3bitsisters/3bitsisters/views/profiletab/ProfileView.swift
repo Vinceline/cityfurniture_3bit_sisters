@@ -45,7 +45,7 @@ struct ProfileView: View {
                             .font(.system(size: 80))
                             .foregroundColor(.blue)
                         
-                        Text("WalkSafe User")
+                        Text("WalkSoflo User")
                             .font(.title2)
                             .fontWeight(.bold)
                         
@@ -215,7 +215,7 @@ struct ProfileView: View {
                         
                         SettingsRow(
                             icon: "info.circle.fill",
-                            title: "About WalkSafe FL",
+                            title: "About WalkSoflo ",
                             subtitle: "Version 1.0",
                             color: .gray
                         )

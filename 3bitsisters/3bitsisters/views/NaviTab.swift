@@ -41,7 +41,7 @@ struct NaviTabView: View {
             }
             .tabItem {
                 Image(systemName: "shoe.2.fill")
-                Text("Walk Safe")
+                Text("")
             }
             .tag(0)
             .onAppear {
@@ -57,7 +57,7 @@ struct NaviTabView: View {
                 .environmentObject(apiService)
                 .tabItem {
                     Image(systemName: "person.fill")
-                    Text("Profile")
+                    Text("")
                 }
                 .tag(1)
         }
