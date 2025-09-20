@@ -20,6 +20,7 @@ struct ReportIncidentView: View {
     @State private var showingLocationError = false
     @State private var locationErrorMessage = ""
     @State private var showingContactInfo = false
+    @State private var hazardDuration = "short_term"
     
     let incidentTypes = [
         ("dog", "Unleashed Dog", "🐕"),
@@ -190,6 +191,58 @@ struct ReportIncidentView: View {
                             }
                         }
                     }
+                    // Hazard Duration
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Hazard Duration")
+                            .font(.headline)
+                        
+                        VStack(spacing: 8) {
+                            Button(action: {
+                                hazardDuration = "short_term"
+                            }) {
+                                HStack {
+                                    Image(systemName: hazardDuration == "short_term" ? "checkmark.circle.fill" : "circle")
+                                        .foregroundColor(.blue)
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Short-term Hazard")
+                                            .fontWeight(.medium)
+                                        Text("Temporary issue that will resolve quickly (unleashed dog, person blocking path)")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    Spacer()
+                                }
+                                .padding()
+                                .background(hazardDuration == "short_term" ? Color.blue.opacity(0.1) : Color.gray.opacity(0.1))
+                                .cornerRadius(8)
+                            }
+                            .foregroundColor(.primary)
+                            
+                            Button(action: {
+                                hazardDuration = "long_term"
+                            }) {
+                                HStack {
+                                    Image(systemName: hazardDuration == "long_term" ? "checkmark.circle.fill" : "circle")
+                                        .foregroundColor(.orange)
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Long-term Hazard")
+                                            .fontWeight(.medium)
+                                        Text("Persistent issue requiring maintenance or repair (flooding, broken sidewalk)")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    Spacer()
+                                }
+                                .padding()
+                                .background(hazardDuration == "long_term" ? Color.orange.opacity(0.1) : Color.gray.opacity(0.1))
+                                .cornerRadius(8)
+                            }
+                            .foregroundColor(.primary)
+                        }
+                    }
+                    .padding()
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(12)
                     
                     // Severity Slider
                     VStack(alignment: .leading, spacing: 8) {
