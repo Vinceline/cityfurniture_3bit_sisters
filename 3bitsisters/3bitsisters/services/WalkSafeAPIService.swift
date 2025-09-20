@@ -6,7 +6,7 @@ import Combine
 import CoreLocation
 
 class WalkSafeAPIService: ObservableObject {
-    private let baseURL = "http:131.91.4.34:8000"
+    private let baseURL = "http:12.248.84.182:8000"
     private let session: URLSession
     
     @Published var isModelReady = false
