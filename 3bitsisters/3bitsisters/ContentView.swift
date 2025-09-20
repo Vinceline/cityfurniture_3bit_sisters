@@ -36,91 +36,82 @@ struct ContentView: View {
             
             // Top UI Controls
             VStack {
-                HStack {
-                    // App Title
-                    Text("WalkSafe FL")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(Color.blue.opacity(0.8))
-                        .cornerRadius(20)
-                    
-                    Spacer()
-                    
-                    // Location Status
-                    Button(action: {
-                        locationManager.requestLocation()
-                    }) {
-                        Image(systemName: locationManager.isLocationAvailable ? "location.fill" : "location.slash")
-                            .foregroundColor(.white)
-                            .padding(12)
-                            .background(locationManager.isLocationAvailable ? Color.green : Color.red)
-                            .clipShape(Circle())
+                // Top row with location button and action buttons
+                VStack(spacing: 12) {
+                    // Location status at the very top
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            locationManager.requestLocation()
+                        }) {
+                            Image(systemName: locationManager.isLocationAvailable ? "location.fill" : "location.slash")
+                                .foregroundColor(.white)
+                                .padding(12)
+                                .background(locationManager.isLocationAvailable ? Color.green : Color.red)
+                                .clipShape(Circle())
+                        }
                     }
+                    .padding(.horizontal)
+                    .padding(.top, 10)
+                    
+                    // Action buttons below location
+                    HStack(spacing: 16) {
+                        // Report Incident Button
+                        Button(action: {
+                            showingReportSheet = true
+                        }) {
+                            VStack(spacing: 4) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .font(.title3)
+                                Text("Report")
+                                    .font(.caption)
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(Color.red)
+                            .cornerRadius(20)
+                        }
+                        
+                        // Trip Planner Button
+                        Button(action: {
+                            showingTripPlanner = true
+                        }) {
+                            VStack(spacing: 4) {
+                                Image(systemName: "map.fill")
+                                    .font(.title3)
+                                Text("Plan Trip")
+                                    .font(.caption)
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(Color.green)
+                            .cornerRadius(20)
+                        }
+                        
+                        // Check Safety / Toggle Danger Zones
+                        Button(action: {
+                            toggleDangerZones()
+                        }) {
+                            VStack(spacing: 4) {
+                                Image(systemName: showingDangerZones ? "shield.fill" : "shield.checkered")
+                                    .font(.title3)
+                                Text(showingDangerZones ? "Hide Zones" : "Check Safety")
+                                    .font(.caption)
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(showingDangerZones ? Color.orange : Color.blue)
+                            .cornerRadius(20)
+                        }
+                    }
+                    .padding(.horizontal)
                 }
-                .padding(.horizontal)
-                .padding(.top, 10) // Reduced top padding for tab view
                 
                 Spacer()
-                
-                // Bottom Controls - Move up to account for tab bar
-                HStack(spacing: 16) {
-                    // Report Incident Button
-                    Button(action: {
-                        showingReportSheet = true
-                    }) {
-                        VStack(spacing: 4) {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .font(.title3)
-                            Text("Report")
-                                .font(.caption)
-                        }
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(Color.red)
-                        .cornerRadius(20)
-                    }
-                    
-                    // Trip Planner Button
-                    Button(action: {
-                        showingTripPlanner = true
-                    }) {
-                        VStack(spacing: 4) {
-                            Image(systemName: "map.fill")
-                                .font(.title3)
-                            Text("Plan Trip")
-                                .font(.caption)
-                        }
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(Color.green)
-                        .cornerRadius(20)
-                    }
-                    
-                    // Check Safety / Toggle Danger Zones
-                    Button(action: {
-                        toggleDangerZones()
-                    }) {
-                        VStack(spacing: 4) {
-                            Image(systemName: showingDangerZones ? "shield.fill" : "shield.checkered")
-                                .font(.title3)
-                            Text(showingDangerZones ? "Hide Zones" : "Check Safety")
-                                .font(.caption)
-                        }
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(showingDangerZones ? Color.orange : Color.blue)
-                        .cornerRadius(20)
-                    }
-                }
-                .padding(.bottom, 100) // Add space for tab bar
             }
-            
             // Danger Zone Legend (only when zones are visible)
             if showingDangerZones {
                 VStack {
