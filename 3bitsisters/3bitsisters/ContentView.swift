@@ -18,9 +18,72 @@ struct ContentView: View {
     @State private var showingTripPlanner = false
     @State private var showingDangerZones = false
     @State private var showingRouteOnMap = false
+    @State private var showingWeatherAlert = true
+    @State private var weatherAlertOffset: CGFloat = 0
     
     var body: some View {
         ZStack {
+            // Weather Alert Popup
+                    if showingWeatherAlert {
+                        VStack {
+                            HStack {
+                                HStack(spacing: 12) {
+                                    Image(systemName: "cloud.bolt.rain.fill")
+                                        .font(.title2)
+                                        .foregroundColor(.yellow)
+                                    
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Weather Alert")
+                                            .font(.headline)
+                                            .fontWeight(.bold)
+                                        Text("Heavy rain and lightning expected in 30 minutes. Please seek shelter soon.")
+                                            .font(.body)
+                                            .multilineTextAlignment(.leading)
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    Button(action: {
+                                        dismissWeatherAlert()
+                                    }) {
+                                        Image(systemName: "xmark")
+                                            .font(.title3)
+                                            .fontWeight(.medium)
+                                            .foregroundColor(.primary)
+                                    }
+                                }
+                                .padding()
+                                .background(Color.orange.opacity(0.9))
+                                .foregroundColor(.white)
+                                .cornerRadius(12)
+                                .shadow(radius: 8)
+                            }
+                            .padding(.horizontal)
+                            .padding(.top, 60) // Account for safe area
+                            .offset(y: weatherAlertOffset)
+                            .gesture(
+                                DragGesture()
+                                    .onChanged { value in
+                                        if value.translation.height < 0 {
+                                            weatherAlertOffset = value.translation.height
+                                        }
+                                    }
+                                    .onEnded { value in
+                                        if value.translation.height < -50 {
+                                            dismissWeatherAlert()
+                                        } else {
+                                            withAnimation(.spring()) {
+                                                weatherAlertOffset = 0
+                                            }
+                                        }
+                                    }
+                            )
+
+                            Spacer()
+                        }
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .zIndex(1000) // Ensure it appears above map
+                    }
             // Main Map View - Remove NavigationView wrapper
             MapView(
                 locationManager: locationManager,
@@ -36,82 +99,80 @@ struct ContentView: View {
             
             // Top UI Controls
             VStack {
-                // Top row with location button and action buttons
-                VStack(spacing: 12) {
-                    // Location status at the very top
-                    HStack {
-                        Spacer()
-                        Button(action: {
-                            locationManager.requestLocation()
-                        }) {
-                            Image(systemName: locationManager.isLocationAvailable ? "location.fill" : "location.slash")
-                                .foregroundColor(.white)
-                                .padding(12)
-                                .background(locationManager.isLocationAvailable ? Color.green : Color.red)
-                                .clipShape(Circle())
-                        }
+                HStack {
+                    Spacer()
+                    // Location Status
+                    Button(action: {
+                        locationManager.requestLocation()
+                    }) {
+                        Image(systemName: locationManager.isLocationAvailable ? "location.fill" : "location.slash")
+                            .foregroundColor(.white)
+                            .padding(12)
+                            .background(locationManager.isLocationAvailable ? Color.green : Color.red)
+                            .clipShape(Circle())
                     }
-                    .padding(.horizontal)
-                    .padding(.top, 10)
-                    
-                    // Action buttons below location
-                    HStack(spacing: 16) {
-                        // Report Incident Button
-                        Button(action: {
-                            showingReportSheet = true
-                        }) {
-                            VStack(spacing: 4) {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .font(.title3)
-                                Text("Report")
-                                    .font(.caption)
-                            }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                            .background(Color.red)
-                            .cornerRadius(20)
-                        }
-                        
-                        // Trip Planner Button
-                        Button(action: {
-                            showingTripPlanner = true
-                        }) {
-                            VStack(spacing: 4) {
-                                Image(systemName: "map.fill")
-                                    .font(.title3)
-                                Text("Plan Trip")
-                                    .font(.caption)
-                            }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                            .background(Color.green)
-                            .cornerRadius(20)
-                        }
-                        
-                        // Check Safety / Toggle Danger Zones
-                        Button(action: {
-                            toggleDangerZones()
-                        }) {
-                            VStack(spacing: 4) {
-                                Image(systemName: showingDangerZones ? "shield.fill" : "shield.checkered")
-                                    .font(.title3)
-                                Text(showingDangerZones ? "Hide Zones" : "Check Safety")
-                                    .font(.caption)
-                            }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                            .background(showingDangerZones ? Color.orange : Color.blue)
-                            .cornerRadius(20)
-                        }
-                    }
-                    .padding(.horizontal)
                 }
+                .padding(.horizontal)
+                .padding(.top, 10)
                 
                 Spacer()
+                
+                // Bottom Controls - Very bottom, just above tab bar
+                HStack(spacing: 16) {
+                    // Report Incident Button
+                    Button(action: {
+                        showingReportSheet = true
+                    }) {
+                        VStack(spacing: 4) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.title3)
+                            Text("Report")
+                                .font(.caption)
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(Color.red)
+                        .cornerRadius(20)
+                    }
+                    
+                    // Trip Planner Button
+                    Button(action: {
+                        showingTripPlanner = true
+                    }) {
+                        VStack(spacing: 4) {
+                            Image(systemName: "map.fill")
+                                .font(.title3)
+                            Text("Plan Trip")
+                                .font(.caption)
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(Color.green)
+                        .cornerRadius(20)
+                    }
+                    
+                    // Check Safety / Toggle Danger Zones
+                    Button(action: {
+                        toggleDangerZones()
+                    }) {
+                        VStack(spacing: 4) {
+                            Image(systemName: showingDangerZones ? "shield.fill" : "shield.checkered")
+                                .font(.title3)
+                            Text(showingDangerZones ? "Hide Zones" : "Check Safety")
+                                .font(.caption)
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(showingDangerZones ? Color.orange : Color.blue)
+                        .cornerRadius(20)
+                    }
+                }
+                .padding(.bottom, 20) // Much closer to tab bar
             }
+            
             // Danger Zone Legend (only when zones are visible)
             if showingDangerZones {
                 VStack {
@@ -207,7 +268,11 @@ struct ContentView: View {
             checkCurrentLocationSafety()
         }
     }
-    
+    private func dismissWeatherAlert() {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            showingWeatherAlert = false
+        }
+    }
     private func checkCurrentLocationSafety() {
         guard let location = locationManager.currentLocation else { return }
         
