@@ -1,18 +1,16 @@
 import SwiftUI
 import MapKit
 
-
-
 struct MapView: UIViewRepresentable {
     @ObservedObject var locationManager: LocationManager
-       @ObservedObject var apiService: WalkSafeAPIService
-       @Binding var showingSafetyAlert: Bool
-       @Binding var currentSafetyPrediction: SafetyPrediction?
-       @Binding var selectedRoute: [CLLocationCoordinate2D]
-       @Binding var showingRouteAnalysis: Bool
-       @Binding var showingDangerZones: Bool
-       @Binding var showingRouteOnMap: Bool  // Add this line
-       
+    @ObservedObject var apiService: WalkSafeAPIService
+    @Binding var showingSafetyAlert: Bool
+    @Binding var currentSafetyPrediction: SafetyPrediction?
+    @Binding var selectedRoute: [CLLocationCoordinate2D]
+    @Binding var showingRouteAnalysis: Bool
+    @Binding var showingDangerZones: Bool
+    @Binding var showingRouteOnMap: Bool
+
     func makeUIView(context: Context) -> MKMapView {
         let mapView = MKMapView()
         mapView.delegate = context.coordinator
@@ -40,6 +38,7 @@ struct MapView: UIViewRepresentable {
         }
         
         context.coordinator.toggleDangerZones(mapView: mapView, show: showingDangerZones)
+        context.coordinator.updateRoute(mapView: mapView, route: selectedRoute, showRoute: showingRouteOnMap)
     }
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
@@ -48,6 +47,8 @@ struct MapView: UIViewRepresentable {
         var parent: MapView
         private var dangerZoneOverlays: [MKOverlay] = []
         private var isDangerZonesVisible = false
+        private var routeOverlay: MKOverlay?
+        private var routeAnnotations: [MKAnnotation] = []
 
         init(_ parent: MapView) {
             self.parent = parent
@@ -62,7 +63,7 @@ struct MapView: UIViewRepresentable {
             let delrayCenter = CLLocation(latitude: 26.4615, longitude: -80.0728)
             let tapped = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
             if tapped.distance(from: delrayCenter) <= 4828.03 {
-                let existing = mapView.annotations.filter { !($0 is MKUserLocation) && $0.title != "Delray Beach Center" }
+                let existing = mapView.annotations.filter { !($0 is MKUserLocation) && $0.title != "Delray Beach Center" && !routeAnnotations.contains(where: { $0.coordinate.latitude == $0.coordinate.latitude && $0.coordinate.longitude == $0.coordinate.longitude }) }
                 mapView.removeAnnotations(existing)
 
                 parent.selectedRoute.removeAll()
@@ -73,6 +74,100 @@ struct MapView: UIViewRepresentable {
                 annotation.title = "Route Point"
                 mapView.addAnnotation(annotation)
             }
+        }
+
+        func updateRoute(mapView: MKMapView, route: [CLLocationCoordinate2D], showRoute: Bool) {
+            // Remove existing route
+            clearRoute(mapView: mapView)
+            
+            if showRoute && !route.isEmpty {
+                displayRoute(mapView: mapView, route: route)
+            }
+        }
+        
+        private func clearRoute(mapView: MKMapView) {
+            // Remove route overlay
+            if let overlay = routeOverlay {
+                mapView.removeOverlay(overlay)
+                routeOverlay = nil
+            }
+            
+            // Remove route annotations
+            mapView.removeAnnotations(routeAnnotations)
+            routeAnnotations.removeAll()
+        }
+        
+        private func displayRoute(mapView: MKMapView, route: [CLLocationCoordinate2D]) {
+            guard route.count >= 2 else { return }
+            
+            // Add route annotations for start, waypoints, and end
+            addRouteAnnotations(mapView: mapView, route: route)
+            
+            // Create and add route polyline
+            let polyline = MKPolyline(coordinates: route, count: route.count)
+            polyline.title = "PLANNED_ROUTE"
+            mapView.addOverlay(polyline)
+            routeOverlay = polyline
+            
+            // Zoom to fit the route
+            let region = regionThatFits(coordinates: route)
+            mapView.setRegion(region, animated: true)
+        }
+        
+        private func addRouteAnnotations(mapView: MKMapView, route: [CLLocationCoordinate2D]) {
+            for (index, coordinate) in route.enumerated() {
+                // Only add annotations for key points (start, end, and some waypoints)
+                let shouldAddAnnotation = index == 0 || index == route.count - 1 || index % 5 == 0
+                
+                if shouldAddAnnotation {
+                    let annotation = MKPointAnnotation()
+                    annotation.coordinate = coordinate
+                    
+                    if index == 0 {
+                        annotation.title = "Start"
+                        annotation.subtitle = "Your walking trip begins here"
+                    } else if index == route.count - 1 {
+                        annotation.title = "Destination"
+                        annotation.subtitle = "Your walking trip ends here"
+                    } else {
+                        annotation.title = "Stop \((index / 5) + 1)"
+                        annotation.subtitle = "Waypoint along your route"
+                    }
+                    
+                    mapView.addAnnotation(annotation)
+                    routeAnnotations.append(annotation)
+                }
+            }
+        }
+        
+        private func regionThatFits(coordinates: [CLLocationCoordinate2D]) -> MKCoordinateRegion {
+            guard !coordinates.isEmpty else {
+                return MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 26.4615, longitude: -80.0728), latitudinalMeters: 2000, longitudinalMeters: 2000)
+            }
+            
+            var minLat = coordinates[0].latitude
+            var maxLat = coordinates[0].latitude
+            var minLon = coordinates[0].longitude
+            var maxLon = coordinates[0].longitude
+            
+            for coordinate in coordinates {
+                minLat = min(minLat, coordinate.latitude)
+                maxLat = max(maxLat, coordinate.latitude)
+                minLon = min(minLon, coordinate.longitude)
+                maxLon = max(maxLon, coordinate.longitude)
+            }
+            
+            let center = CLLocationCoordinate2D(
+                latitude: (minLat + maxLat) / 2,
+                longitude: (minLon + maxLon) / 2
+            )
+            
+            let span = MKCoordinateSpan(
+                latitudeDelta: (maxLat - minLat) * 1.3, // Add 30% padding
+                longitudeDelta: (maxLon - minLon) * 1.3
+            )
+            
+            return MKCoordinateRegion(center: center, span: span)
         }
 
         func toggleDangerZones(mapView: MKMapView, show: Bool) {
@@ -86,7 +181,7 @@ struct MapView: UIViewRepresentable {
         }
         
         func removeDangerZones(mapView: MKMapView) {
-            // Remove only danger zone overlays, keep boundary
+            // Remove only danger zone overlays, keep boundary and route
             let dangerOverlays = mapView.overlays.filter { overlay in
                 if let circle = overlay as? MKCircle,
                    let title = circle.title,
@@ -99,6 +194,7 @@ struct MapView: UIViewRepresentable {
             mapView.removeOverlays(dangerOverlays)
             dangerZoneOverlays.removeAll()
         }
+        
         func addArtificialDangerZones(mapView: MKMapView) {
             // Remove existing danger zones first
             removeDangerZones(mapView: mapView)
@@ -149,7 +245,6 @@ struct MapView: UIViewRepresentable {
             }
         }
 
-
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
             if annotation is MKUserLocation { return nil }
 
@@ -162,16 +257,41 @@ struct MapView: UIViewRepresentable {
                 view?.annotation = annotation
             }
 
-            if annotation.title == "Route Point" {
-                view?.image = UIImage(systemName: "person.circle.fill")?
-                    .withConfiguration(UIImage.SymbolConfiguration(pointSize: 30, weight: .medium))
-                    .withTintColor(.systemBlue, renderingMode: .alwaysOriginal)
+            // Customize annotation based on title
+            if let title = annotation.title {
+                switch title {
+                case "Start":
+                    view?.image = UIImage(systemName: "location.circle.fill")?
+                        .withConfiguration(UIImage.SymbolConfiguration(pointSize: 25, weight: .bold))
+                        .withTintColor(.systemGreen, renderingMode: .alwaysOriginal)
+                case "Destination":
+                    view?.image = UIImage(systemName: "flag.circle.fill")?
+                        .withConfiguration(UIImage.SymbolConfiguration(pointSize: 25, weight: .bold))
+                        .withTintColor(.systemRed, renderingMode: .alwaysOriginal)
+                case let str where str?.starts(with: "Stop") == true:
+                    view?.image = UIImage(systemName: "mappin.circle.fill")?
+                        .withConfiguration(UIImage.SymbolConfiguration(pointSize: 20, weight: .medium))
+                        .withTintColor(.systemBlue, renderingMode: .alwaysOriginal)
+                default:
+                    view?.image = UIImage(systemName: "person.circle.fill")?
+                        .withConfiguration(UIImage.SymbolConfiguration(pointSize: 30, weight: .medium))
+                        .withTintColor(.systemBlue, renderingMode: .alwaysOriginal)
+                }
             }
 
             return view
         }
 
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+            if let polyline = overlay as? MKPolyline, polyline.title == "PLANNED_ROUTE" {
+                let renderer = MKPolylineRenderer(polyline: polyline)
+                renderer.strokeColor = UIColor.systemBlue
+                renderer.lineWidth = 4.0
+                renderer.lineCap = .round
+                renderer.lineJoin = .round
+                return renderer
+            }
+            
             if let circle = overlay as? MKCircle {
                 let renderer = MKCircleRenderer(circle: circle)
 

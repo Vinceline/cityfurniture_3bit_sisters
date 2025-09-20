@@ -251,7 +251,6 @@ struct TripAnalysisView: View {
         // Close both sheets by setting the parent binding to false
         showingTripPlanner = false
     }
-    
     private func generateSafeRoute() -> [CLLocationCoordinate2D] {
         var route: [CLLocationCoordinate2D] = []
         
